@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from io import BytesIO
+import re
 
 output = BytesIO()
 today = date.today().strftime("%d%m%Y")
@@ -17,9 +18,12 @@ uploaded_file = st.file_uploader("Carica un nuovo colisage", type = ["xls", "xls
 if uploaded_file is not None:
     # Import the dataframe
     df = pd.read_excel(uploaded_file, skiprows = 4)
+    
+    df.columns = df.columns.str.strip()
+
     df = df.rename(columns={"DESIGNATION": "pesce",
                             "Nombre de Coli": "numero_casse",
-                            "Poids net par Coli ": "peso_per_cassa",
+                            "Poids net par Coli": "peso_per_cassa",
                             "DETAIL": "dettaglio"})
     df = df[["pesce", "numero_casse", "peso_per_cassa", "dettaglio"]]
     df = df.dropna(axis = 0, how = 'any', subset = None, inplace = False)
@@ -29,27 +33,22 @@ if uploaded_file is not None:
     L_peso = []
     
     
-    def split_digit (text):
-        splitted = []  
-        tmp = []       
-
-        for c in text:
-            if c.isdigit():
-                tmp.append(c)   
-
-            elif tmp:           
-                splitted.append(''.join(tmp))
-                tmp = []
-
-        if tmp:
-            splitted.append(''.join(tmp))
-        return splitted
+    def extract_first_last(text):
+        # Remove everything in parentheses
+        text_without_parens = re.sub(r'\([^)]*\)', '', text)
+        
+        # Find all numbers (from ranges and standalone)
+        numbers = re.findall(r'\d+', text_without_parens)
+        
+        if numbers:
+            return int(numbers[0]), int(numbers[-1])
+        return None, None
 
 
     index = 1 
     for pesce, num, peso, dett in zip(df.pesce, df.numero_casse, df.peso_per_cassa, df.dettaglio):
         num = int(num)
-        num_list = split_digit(dett.split("(")[0])
+        num_list = extract_first_last(dett)
         
         if num == 1:
             L_numero.append(int(num_list[0]))
