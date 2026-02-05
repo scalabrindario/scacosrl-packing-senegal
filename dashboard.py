@@ -16,7 +16,7 @@ uploaded_file = st.file_uploader("Carica un nuovo colisage", type = ["xls", "xls
 # If the file exists
 if uploaded_file is not None:
     # Import the dataframe
-    df = pd.read_excel(uploaded_file, skiprows = 3)
+    df = pd.read_excel(uploaded_file, skiprows = 4)
     df = df.rename(columns={"DESIGNATION": "pesce",
                             "Nombre de Coli": "numero_casse",
                             "Poids net par Coli ": "peso_per_cassa",
